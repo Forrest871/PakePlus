@@ -1,22 +1,365 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="styles.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus App</title>
-        <script type="module" src="/main.js" defer></script>
-    </head>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Resolume 素材定位助手</title>
+<style>
+  :root { 
+    --bg:#0f1115; 
+    --fg:#e6e6e6; 
+    --muted:#9aa0a6; 
+    --accent:#5cc8ff; 
+    --card:#151821; 
+    --ok:#3ddc97; 
+    --warn:#ffd166; 
+    --err:#ff6b6b; 
+    --column-highlight:#ff6b6b;
+    --clip-highlight:#3ddc97;
+  }
+  * { box-sizing:border-box; }
+  body { 
+    margin:0; 
+    background:var(--bg); 
+    color:var(--fg); 
+    font:14px/1.6 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; 
+  }
+  header { 
+    padding:18px 20px; 
+    border-bottom:1px solid #20232b; 
+    background:#0d0f14; 
+    position:sticky; 
+    top:0; 
+    z-index:10; 
+    text-align: center;
+  }
+  h1 { 
+    margin:0; 
+    font-size:18px; 
+    letter-spacing:.3px; 
+    background: linear-gradient(90deg, #5cc8ff, #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .container { 
+    max-width:600px; 
+    margin:18px auto; 
+    padding:0 16px; 
+  }
+  .card { 
+    background:var(--card); 
+    border:1px solid #20232b; 
+    border-radius:14px; 
+    padding:20px; 
+    box-shadow:0 4px 20px rgb(0 0 0 / 20%); 
+  }
+  .search-container {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .search-input {
+    flex: 1;
+  }
+  input[type="text"] {
+    width:100%; 
+    padding:12px 16px; 
+    border-radius:10px; 
+    border:1px solid #272a33; 
+    background:#0f1320; 
+    color:var(--fg);
+    outline:none;
+    transition: all 0.2s ease;
+    font-size: 14px;
+  }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(92, 200, 255, 0.2);
+  }
+  .btn { 
+    padding:12px 24px; 
+    border-radius:10px; 
+    border:none; 
+    background:linear-gradient(180deg, #2a84ff, #146ae0); 
+    color:#fff; 
+    cursor:pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .btn:hover { 
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(42, 132, 255, 0.3);
+  }
+  .status { 
+    margin:15px 0; 
+    padding:12px; 
+    border-radius:8px; 
+    background:#0f1320; 
+    border:1px solid #242a36; 
+    text-align: center;
+    font-size: 14px;
+  }
+  table { 
+    width:100%; 
+    border-collapse:collapse; 
+    margin-top: 10px;
+  }
+  th, td { 
+    padding:12px 14px; 
+    border-bottom:1px solid #242836; 
+    font-size:13px; 
+  }
+  th { 
+    text-align:left; 
+    color:#c9d1d9; 
+    font-weight: 600;
+  }
+  tr:hover { 
+    background:#12172a; 
+  }
+  .ok { 
+    color:var(--ok); 
+  } 
+  .warn { 
+    color:var(--warn); 
+  } 
+  .err { 
+    color:var(--err); 
+  }
+  .sep { 
+    height:1px; 
+    background:#222736; 
+    margin:14px 0; 
+  }
+  .column-cell {
+    font-weight: bold;
+    color: var(--column-highlight);
+    background: rgba(255, 107, 107, 0.15);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 14px;
+    width: 80px;
+  }
+  .clip-cell {
+    font-weight: bold;
+    color: var(--clip-highlight);
+    background: rgba(61, 220, 151, 0.15);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .result-count {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 10px 0;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Resolume 素材定位助手</h1>
+</header>
 
-    <body>
-        <main class="container">
-            <h1>Welcome to PakePlus</h1>
+<div class="container">
+  <div class="card">
+    <div class="search-container">
+      <div class="search-input">
+        <input id="kw" type="text" placeholder="输入关键词搜索素材（支持空格、逗号、句号分隔）" />
+      </div>
+      <button class="btn" id="runBtn">搜索</button>
+    </div>
 
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit">Greet</button>
-            </form>
-            <p id="greet-msg"></p>
-        </main>
-    </body>
+    <div class="status" id="status">输入关键词搜索素材位置</div>
+
+    <div class="sep"></div>
+
+    <div class="result-count" id="resultCount"></div>
+
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th> Column </th>
+          <th> Clip 名称 </th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ---------- 工具函数 ----------
+const $ = sel => document.querySelector(sel);
+const norm = v => {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number" || typeof v === "boolean") return String(v);
+  try {
+    if (v.path) return String(v.path);
+    if (v.file) return String(v.file);
+    if (v.name) return String(v.name);
+    return JSON.stringify(v);
+  } catch { return ""; }
+};
+const lc = s => norm(s).toLowerCase();
+
+// 提取Clip名称中的实际名称部分
+function extractClipName(clipObj) {
+  if (!clipObj) return "";
+  
+  if (clipObj.name && typeof clipObj.name === 'object' && clipObj.name.value) {
+    return clipObj.name.value;
+  }
+  
+  if (typeof clipObj.name === 'string') {
+    return clipObj.name;
+  }
+  
+  return "";
+}
+
+// 优化关键词分割函数，支持多种分隔符
+function splitKeywords(input) {
+  return input.split(/[\s,，.。]+/).map(s => s.trim()).filter(Boolean).map(s => s.toLowerCase());
+}
+
+function baseURL() {
+  return "http://127.0.0.1:8080";
+}
+
+function headers() {
+  return {};
+}
+
+async function getJSON(url) {
+  const r = await fetch(url, { headers: headers() });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText} @ ${url}`);
+  return r.json();
+}
+
+async function post(url) {
+  return fetch(url, { method:"POST", headers: headers() });
+}
+
+function logStatus(msg, type="") {
+  const box = $("#status");
+  box.innerText = msg;
+  box.style.borderColor = type === "ok" ? "var(--ok)" :
+                          type === "warn" ? "var(--warn)" :
+                          type === "err" ? "var(--err)" : "#242a36";
+}
+
+function fillTable(rows) {
+  const tb = $("#tbl tbody");
+  tb.innerHTML = "";
+  rows.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td class="column-cell">${r.column}</td>
+      <td class="clip-cell">${escapeHtml(r.clipName)}</td>
+    `;
+    tb.appendChild(tr);
+  });
+  
+  const resultCount = $("#resultCount");
+  if (rows.length > 0) {
+    resultCount.textContent = `找到 ${rows.length} 个匹配结果`;
+    resultCount.style.color = "var(--ok)";
+  } else {
+    resultCount.textContent = "没有找到匹配结果";
+    resultCount.style.color = "var(--muted)";
+  }
+}
+
+function escapeHtml(s="") {
+  return s.replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[ch]));
+}
+
+// ---------- 核心逻辑 ----------
+async function listDecks() {
+  const base = baseURL();
+  const urls = [`${base}/api/v1/composition/decks`, `${base}/api/v1/decks`];
+  for (const u of urls) {
+    try {
+      const arr = await getJSON(u);
+      if (Array.isArray(arr) && arr.length) return arr;
+    } catch (e) {}
+  }
+  return [{ id: null, name: "CurrentDeck", selected: true }];
+}
+
+async function selectDeck(id) {
+  const base = baseURL();
+  const urls = [`${base}/api/v1/composition/decks/${id}/select`, `${base}/api/v1/decks/${id}/select`];
+  for (const u of urls) { try { await post(u); return; } catch (e) {} }
+}
+
+function scanComposition(json, kws=[]) {
+  const out = [];
+  (json.layers || []).forEach((layer, li) => {
+    (layer.clips || []).forEach((clip, ci) => {
+      const clipName = extractClipName(clip);
+      const sourceName = norm(clip.source?.name);
+      
+      const fields = [lc(clipName), lc(sourceName)].join(" || ");
+      const hit = kws.find(k => fields.includes(k));
+      
+      if (hit) {
+        out.push({
+          column: ci + 1,
+          clipName: clipName
+        });
+      }
+    });
+  });
+  return out;
+}
+
+async function runSearch() {
+  try {
+    const base = baseURL();
+    const kws = splitKeywords($("#kw").value || "");
+    if (!kws.length) { logStatus("请输入至少一个关键词", "warn"); return; }
+
+    logStatus("搜索中…");
+
+    const rows = [];
+    const decks = await listDecks();
+
+    for (const d of decks) {
+      if (d.id !== null && !d.selected) {
+        await selectDeck(d.id);
+        await new Promise(r => setTimeout(r, 120));
+      }
+      const comp = await getJSON(`${base}/api/v1/composition`);
+      rows.push(...scanComposition(comp, kws));
+    }
+
+    fillTable(rows);
+    if (rows.length) {
+      logStatus(`✅ 找到 ${rows.length} 条匹配`, "ok");
+    } else {
+      logStatus("❌ 未找到匹配", "warn");
+    }
+  } catch (e) {
+    console.error(e);
+    logStatus("❌ 搜索失败，请检查连接", "err");
+  }
+}
+
+// ---------- 绑定事件 ----------
+$("#runBtn").addEventListener("click", runSearch);
+
+$("#kw").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    runSearch();
+  }
+});
+</script>
+</body>
 </html>
